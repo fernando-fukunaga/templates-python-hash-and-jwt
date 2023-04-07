@@ -1,11 +1,32 @@
-'''
-Ordem das tarefas:
+import bcrypt
+from jose import jwt
 
-1 - Criar um Sign Up
-2 - Criptografar a senha inputada
-3 - Guardar dados em um db sintético que será um dict
-4 - Criar um Sign In
-5 - Confrontar a senha inserida no Sign In com a hasheada do db
-6 - Se der certo, gerar um token jwt com o username do user
-7 - Usar esse token para algo
-'''
+database = {}
+SECRET_KEY = "super_secret_key_be_careful"
+
+def register_user(username, password):
+    hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    database[username] = hashed_password
+
+def login(username, password):
+    if username in database:
+        hashed_password_from_db = database[username]
+        if bcrypt.checkpw(password.encode(), hashed_password_from_db):
+            token = jwt.encode({"username": username}, SECRET_KEY, algorithm='HS256')
+            return token
+        else:
+            return "400 bad request"
+    return "400 bad request"
+
+register_user("fernando", "senha123")
+token = login("fernando", "senha13")
+
+if token == "400 bad request":
+    raise TypeError(token + ": usuario ou senha incorretos!!")
+
+def request(token):
+    token_decoded = jwt.decode(token, SECRET_KEY, algorithms="HS256")
+    return token_decoded
+    
+response = request(token)
+print(response)
